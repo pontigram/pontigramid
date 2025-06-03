@@ -5,12 +5,12 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Performance optimizations
-  // experimental: {
-  //   optimizeCss: true,
-  // },
+  // Vercel optimizations
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
 
-  // Image optimization
+  // Image optimization for Vercel
   images: {
     remotePatterns: [
       {
