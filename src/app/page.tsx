@@ -1,131 +1,27 @@
-import { prisma } from '@/lib/prisma'
 import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import NewsTicker from '@/components/NewsTicker'
 import MobileHeadlinesSlider from '@/components/MobileHeadlinesSlider'
+import {
+  getLatestArticlesSafe,
+  getFeaturedArticlesSafe,
+  getCompactArticlesSafe,
+  getAllPublishedArticlesSafe,
+  getCategoriesSafe
+} from '@/lib/db-safe'
 
-async function getLatestArticles() {
-  try {
-    return await prisma.article.findMany({
-      where: { published: true },
-      include: {
-        author: {
-          select: { name: true }
-        },
-        category: {
-          select: { name: true, slug: true }
-        }
-      },
-      orderBy: [
-        { publishedAt: 'desc' },
-        { createdAt: 'desc' }
-      ],
-      take: 20 // Increased to show more articles
-    })
-  } catch (error) {
-    console.error('Database error in getLatestArticles:', error)
-    return []
-  }
-}
 
-async function getFeaturedArticles() {
-  try {
-    return await prisma.article.findMany({
-      where: { published: true },
-      include: {
-        author: {
-          select: { name: true }
-        },
-        category: {
-          select: { name: true, slug: true }
-        }
-      },
-      orderBy: [
-        { publishedAt: 'desc' },
-        { createdAt: 'desc' }
-      ],
-      take: 3 // Get top 3 articles for main headlines
-    })
-  } catch (error) {
-    console.error('Database error in getFeaturedArticles:', error)
-    return []
-  }
-}
-
-async function getCompactArticles() {
-  try {
-    return await prisma.article.findMany({
-      where: { published: true },
-      include: {
-        author: {
-          select: { name: true }
-        },
-        category: {
-          select: { name: true, slug: true }
-        }
-      },
-      orderBy: [
-        { publishedAt: 'desc' },
-        { createdAt: 'desc' }
-      ],
-      skip: 3, // Skip the first 3 (featured articles)
-      take: 8 // Get 8 articles for compact section
-    })
-  } catch (error) {
-    console.error('Database error in getCompactArticles:', error)
-    return []
-  }
-}
-
-async function getAllPublishedArticles() {
-  try {
-    return await prisma.article.findMany({
-      where: { published: true },
-      include: {
-        author: {
-          select: { name: true }
-        },
-        category: {
-          select: { name: true, slug: true }
-        }
-      },
-      orderBy: [
-        { publishedAt: 'desc' },
-        { createdAt: 'desc' }
-      ]
-    })
-  } catch (error) {
-    console.error('Database error in getAllPublishedArticles:', error)
-    return []
-  }
-}
-
-async function getCategories() {
-  try {
-    return await prisma.category.findMany({
-      include: {
-        _count: {
-          select: { articles: { where: { published: true } } }
-        }
-      },
-      orderBy: { name: 'asc' }
-    })
-  } catch (error) {
-    console.error('Database error in getCategories:', error)
-    return []
-  }
-}
 
 export default async function Home() {
   try {
     const [articles, allArticles, featuredArticles, compactArticles, categories] = await Promise.all([
-      getLatestArticles(),
-      getAllPublishedArticles(),
-      getFeaturedArticles(),
-      getCompactArticles(),
-      getCategories()
+      getLatestArticlesSafe(),
+      getAllPublishedArticlesSafe(),
+      getFeaturedArticlesSafe(),
+      getCompactArticlesSafe(),
+      getCategoriesSafe()
     ])
 
     // If no data available, show empty state

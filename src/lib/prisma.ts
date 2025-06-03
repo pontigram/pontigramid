@@ -4,23 +4,29 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Create Prisma client with production-optimized settings
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-  errorFormat: 'minimal',
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-})
+// Create Prisma client with build-time safety
+function createPrismaClient() {
+  // During build time, DATABASE_URL might not be available
+  if (!process.env.DATABASE_URL) {
+    console.warn('DATABASE_URL not found, creating mock Prisma client for build')
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: 'postgresql://localhost:5432/mock'
+        }
+      }
+    })
+  }
+
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    errorFormat: 'minimal',
+  })
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
-
-// Ensure connection is established
-prisma.$connect().catch((error) => {
-  console.error('Failed to connect to database:', error)
-})
 
 // Test database connection
 export async function testDatabaseConnection() {
