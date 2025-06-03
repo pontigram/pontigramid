@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
-import { prisma } from './prisma'
+import { Pool } from 'pg'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -13,33 +13,59 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log('Missing credentials')
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          // Use direct PostgreSQL connection instead of Prisma
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: {
+              rejectUnauthorized: false
+            }
+          })
+
+          const client = await pool.connect()
+
+          try {
+            const userQuery = 'SELECT "id", "email", "password", "name", "role" FROM "users" WHERE "email" = $1'
+            const result = await client.query(userQuery, [credentials.email])
+
+            if (result.rows.length === 0) {
+              console.log('User not found:', credentials.email)
+              return null
+            }
+
+            const user = result.rows[0]
+            console.log('User found:', { email: user.email, role: user.role })
+
+            const isPasswordValid = await bcrypt.compare(
+              credentials.password,
+              user.password
+            )
+
+            if (!isPasswordValid) {
+              console.log('Invalid password for user:', credentials.email)
+              return null
+            }
+
+            console.log('Authentication successful for:', credentials.email)
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+            }
+
+          } finally {
+            client.release()
+            await pool.end()
           }
-        })
 
-        if (!user) {
+        } catch (error) {
+          console.error('Authentication error:', error)
           return null
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
         }
       }
     })
