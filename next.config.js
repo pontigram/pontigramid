@@ -10,6 +10,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // Output configuration for Vercel
+  output: process.env.VERCEL_ENV === 'production' ? 'standalone' : undefined,
+
   // External packages configuration for Vercel
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
