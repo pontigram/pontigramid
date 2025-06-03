@@ -4,18 +4,55 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+// Check if we're in build time
+const isBuildTime = process.env.NODE_ENV === 'production' &&
+  (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432/mock'))
+
+// Mock Prisma client for build time
+const mockPrismaClient = {
+  article: {
+    findMany: () => Promise.resolve([]),
+    findFirst: () => Promise.resolve(null),
+    findUnique: () => Promise.resolve(null),
+    count: () => Promise.resolve(0),
+    create: () => Promise.resolve({}),
+    update: () => Promise.resolve({}),
+    delete: () => Promise.resolve({}),
+    groupBy: () => Promise.resolve([]),
+  },
+  category: {
+    findMany: () => Promise.resolve([]),
+    findFirst: () => Promise.resolve(null),
+    findUnique: () => Promise.resolve(null),
+    count: () => Promise.resolve(0),
+    create: () => Promise.resolve({}),
+    update: () => Promise.resolve({}),
+    delete: () => Promise.resolve({}),
+  },
+  user: {
+    findMany: () => Promise.resolve([]),
+    findFirst: () => Promise.resolve(null),
+    findUnique: () => Promise.resolve(null),
+    count: () => Promise.resolve(0),
+    create: () => Promise.resolve({}),
+    update: () => Promise.resolve({}),
+    delete: () => Promise.resolve({}),
+  },
+  analytics: {
+    findMany: () => Promise.resolve([]),
+    count: () => Promise.resolve(0),
+    create: () => Promise.resolve({}),
+    groupBy: () => Promise.resolve([]),
+  },
+  $connect: () => Promise.resolve(),
+  $disconnect: () => Promise.resolve(),
+} as any
+
 // Create Prisma client with build-time safety
 function createPrismaClient() {
-  // During build time, DATABASE_URL might not be available
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432/mock')) {
-    console.warn('DATABASE_URL not found or is mock, creating safe Prisma client for build')
-    return new PrismaClient({
-      datasources: {
-        db: {
-          url: 'postgresql://localhost:5432/mock'
-        }
-      }
-    })
+  if (isBuildTime) {
+    console.warn('🔧 Using mock Prisma client for build time')
+    return mockPrismaClient
   }
 
   return new PrismaClient({
@@ -30,6 +67,11 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 // Test database connection
 export async function testDatabaseConnection() {
+  if (isBuildTime) {
+    console.log('🔧 Mock database connection for build time')
+    return true
+  }
+
   try {
     await prisma.$connect()
     console.log('✅ Database connected successfully')
