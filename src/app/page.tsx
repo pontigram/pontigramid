@@ -119,13 +119,82 @@ async function getCategories() {
 }
 
 export default async function Home() {
-  const [articles, allArticles, featuredArticles, compactArticles, categories] = await Promise.all([
-    getLatestArticles(),
-    getAllPublishedArticles(),
-    getFeaturedArticles(),
-    getCompactArticles(),
-    getCategories()
-  ])
+  try {
+    const [articles, allArticles, featuredArticles, compactArticles, categories] = await Promise.all([
+      getLatestArticles(),
+      getAllPublishedArticles(),
+      getFeaturedArticles(),
+      getCompactArticles(),
+      getCategories()
+    ])
+
+    // If no data available, show empty state
+    if (!articles.length && !allArticles.length && !featuredArticles.length && !compactArticles.length) {
+      return (
+        <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+          <Header categories={categories} showCategories={true} variant="homepage" />
+
+          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+            <div className="card-modern p-8 md:p-12">
+              <div className="mb-6">
+                <svg className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--secondary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+              </div>
+
+              <h1 className="font-heading text-2xl md:text-3xl font-bold mb-4" style={{ color: 'var(--primary)' }}>
+                Selamat Datang di Portal Berita Pontigram
+              </h1>
+
+              <p className="font-body text-lg mb-6" style={{ color: 'var(--secondary)' }}>
+                Portal berita ini sedang dalam tahap setup. Belum ada artikel yang dipublikasikan.
+              </p>
+
+              <div className="space-y-4">
+                <p className="font-body text-sm" style={{ color: 'var(--secondary)' }}>
+                  Untuk mulai menggunakan portal berita:
+                </p>
+
+                <div className="text-left max-w-md mx-auto space-y-2">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-bold">1</span>
+                    </div>
+                    <span className="text-sm">Login ke admin dashboard</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-bold">2</span>
+                    </div>
+                    <span className="text-sm">Buat categories berita</span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-bold">3</span>
+                    </div>
+                    <span className="text-sm">Publikasikan artikel pertama</span>
+                  </div>
+                </div>
+
+                <div className="pt-6">
+                  <a
+                    href="/admin"
+                    className="btn-primary inline-flex items-center"
+                  >
+                    Akses Admin Dashboard
+                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
@@ -802,4 +871,41 @@ export default async function Home() {
       </footer>
     </div>
   )
+  } catch (error) {
+    console.error('Homepage error:', error)
+
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
+        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+          <div className="card-modern p-8 md:p-12">
+            <div className="mb-6">
+              <svg className="w-16 h-16 mx-auto mb-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+
+            <h1 className="font-heading text-2xl md:text-3xl font-bold mb-4" style={{ color: 'var(--primary)' }}>
+              Server Configuration Error
+            </h1>
+
+            <p className="font-body text-lg mb-6" style={{ color: 'var(--secondary)' }}>
+              Terjadi masalah dengan konfigurasi server. Silakan cek environment variables dan koneksi database.
+            </p>
+
+            <div className="pt-6">
+              <a
+                href="/api/health"
+                className="btn-accent inline-flex items-center"
+              >
+                Test Health Check
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 }
