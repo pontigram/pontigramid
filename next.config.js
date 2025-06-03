@@ -5,10 +5,8 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Vercel optimizations
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  // External packages configuration
+  serverExternalPackages: ['@prisma/client'],
 
   // Image optimization for Vercel
   images: {
