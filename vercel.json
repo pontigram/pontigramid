@@ -1,13 +1,15 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
+  "buildCommand": "npm install --legacy-peer-deps && npm run build",
   "installCommand": "npm install --legacy-peer-deps",
-  "outputDirectory": ".next",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
+  },
+  "env": {
+    "SKIP_ENV_VALIDATION": "true",
+    "NEXT_TELEMETRY_DISABLED": "1"
   },
   "headers": [
     {

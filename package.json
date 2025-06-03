@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && DATABASE_URL='postgresql://localhost:5432/mock' SKIP_ENV_VALIDATION=true next build",
+    "build": "prisma generate && SKIP_ENV_VALIDATION=true next build",
+    "vercel-build": "prisma generate && SKIP_ENV_VALIDATION=true next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",

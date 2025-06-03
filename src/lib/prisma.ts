@@ -7,8 +7,8 @@ const globalForPrisma = globalThis as unknown as {
 // Create Prisma client with build-time safety
 function createPrismaClient() {
   // During build time, DATABASE_URL might not be available
-  if (!process.env.DATABASE_URL) {
-    console.warn('DATABASE_URL not found, creating mock Prisma client for build')
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432/mock')) {
+    console.warn('DATABASE_URL not found or is mock, creating safe Prisma client for build')
     return new PrismaClient({
       datasources: {
         db: {
