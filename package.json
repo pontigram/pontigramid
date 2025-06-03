@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "prisma generate && SKIP_ENV_VALIDATION=true next build",
+    "build": "prisma generate && SKIP_ENV_VALIDATION=true DATABASE_URL=postgresql://localhost:5432/mock DIRECT_URL=postgresql://localhost:5432/mock next build",
     "build:safe": "SKIP_ENV_VALIDATION=true DATABASE_URL=postgresql://localhost:5432/mock DIRECT_URL=postgresql://localhost:5432/mock prisma generate && SKIP_ENV_VALIDATION=true next build",
     "start": "next start",
     "lint": "next lint",
