@@ -5,9 +5,10 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Check if we're in build time
-const isBuildTime = (process.env.NODE_ENV === 'production' &&
-  (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432/mock'))) ||
-  process.env.VERCEL_ENV === 'production' && !process.env.VERCEL
+const isBuildTime = process.env.NODE_ENV === 'production' &&
+  process.env.VERCEL_ENV === 'production' &&
+  !process.env.VERCEL &&
+  (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost:5432/mock'))
 
 // Mock Prisma client for build time
 const mockPrismaClient = {
