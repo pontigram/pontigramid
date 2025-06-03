@@ -6,6 +6,79 @@ export async function POST() {
   try {
     console.log('Starting database initialization...')
 
+    // First, try to create tables if they don't exist
+    try {
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "User" (
+          "id" TEXT NOT NULL,
+          "email" TEXT NOT NULL,
+          "password" TEXT NOT NULL,
+          "name" TEXT,
+          "role" TEXT NOT NULL DEFAULT 'USER',
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+        );
+      `
+
+      await prisma.$executeRaw`
+        CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
+      `
+
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "Category" (
+          "id" TEXT NOT NULL,
+          "name" TEXT NOT NULL,
+          "slug" TEXT NOT NULL,
+          "description" TEXT,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "Category_pkey" PRIMARY KEY ("id")
+        );
+      `
+
+      await prisma.$executeRaw`
+        CREATE UNIQUE INDEX IF NOT EXISTS "Category_slug_key" ON "Category"("slug");
+      `
+
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "Article" (
+          "id" TEXT NOT NULL,
+          "title" TEXT NOT NULL,
+          "slug" TEXT NOT NULL,
+          "content" TEXT NOT NULL,
+          "excerpt" TEXT,
+          "featuredImage" TEXT,
+          "published" BOOLEAN NOT NULL DEFAULT false,
+          "isBreaking" BOOLEAN NOT NULL DEFAULT false,
+          "views" INTEGER NOT NULL DEFAULT 0,
+          "authorId" TEXT NOT NULL,
+          "categoryId" TEXT NOT NULL,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL,
+          CONSTRAINT "Article_pkey" PRIMARY KEY ("id")
+        );
+      `
+
+      await prisma.$executeRaw`
+        CREATE UNIQUE INDEX IF NOT EXISTS "Article_slug_key" ON "Article"("slug");
+      `
+
+      await prisma.$executeRaw`
+        CREATE TABLE IF NOT EXISTS "Analytics" (
+          "id" TEXT NOT NULL,
+          "event" TEXT NOT NULL,
+          "data" JSONB,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT "Analytics_pkey" PRIMARY KEY ("id")
+        );
+      `
+
+      console.log('Tables created successfully')
+    } catch (tableError) {
+      console.log('Tables might already exist:', tableError)
+    }
+
     // Check if admin user already exists
     const existingAdmin = await prisma.user.findFirst({
       where: { email: process.env.ADMIN_EMAIL || 'admin@pontigram.com' }
