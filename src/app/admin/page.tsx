@@ -46,14 +46,37 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   useEffect(() => {
-    if (status === 'loading') return
+    const checkAuthentication = async () => {
+      // First try NextAuth session
+      if (status === 'loading') return
 
-    if (!session || session.user.role !== 'ADMIN') {
-      router.push('/admin/login')
-      return
+      if (session && session.user.role === 'ADMIN') {
+        console.log('✅ NextAuth session valid')
+        fetchDashboardData()
+        return
+      }
+
+      // If NextAuth fails, try alternative authentication
+      try {
+        console.log('🔍 Checking alternative authentication...')
+        const response = await fetch('/api/auth/verify-admin')
+        const data = await response.json()
+
+        if (data.success) {
+          console.log('✅ Alternative auth valid')
+          fetchDashboardData()
+          return
+        }
+      } catch (error) {
+        console.log('❌ Alternative auth failed:', error)
+      }
+
+      // If both fail, redirect to login
+      console.log('❌ No valid authentication, redirecting...')
+      router.push('/admin/direct-login')
     }
 
-    fetchDashboardData()
+    checkAuthentication()
   }, [session, status, router])
 
   const fetchDashboardData = async () => {
