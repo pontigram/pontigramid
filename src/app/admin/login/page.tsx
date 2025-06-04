@@ -17,23 +17,52 @@ export default function LoginPage() {
     setError('')
 
     try {
+      console.log('🔐 Attempting login with:', email)
+
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false
       })
 
+      console.log('🔍 Login result:', result)
+
       if (result?.error) {
+        console.log('❌ Login failed:', result.error)
         setError('Invalid credentials')
-      } else {
+      } else if (result?.ok) {
+        console.log('✅ Login successful, getting session...')
+
+        // Wait a bit for session to be established
+        await new Promise(resolve => setTimeout(resolve, 1000))
+
         const session = await getSession()
+        console.log('📋 Session:', session)
+
         if (session?.user?.role === 'ADMIN') {
-          router.push('/admin')
+          console.log('🚀 Redirecting to admin dashboard...')
+
+          // Try multiple redirect methods
+          try {
+            router.push('/admin')
+            // Fallback redirect
+            setTimeout(() => {
+              window.location.href = '/admin'
+            }, 2000)
+          } catch (redirectError) {
+            console.error('Router redirect failed:', redirectError)
+            window.location.href = '/admin'
+          }
         } else {
+          console.log('❌ Access denied, user role:', session?.user?.role)
           setError('Access denied. Admin privileges required.')
         }
+      } else {
+        console.log('❌ Unknown login result:', result)
+        setError('Login failed. Please try again.')
       }
     } catch (error) {
+      console.error('💥 Login error:', error)
       setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)

@@ -15,10 +15,11 @@ export async function GET() {
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(categories)
+    return NextResponse.json({ categories })
   } catch (error) {
+    console.error('Error fetching categories:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch categories' },
+      { error: 'Failed to fetch categories', categories: [] },
       { status: 500 }
     )
   }

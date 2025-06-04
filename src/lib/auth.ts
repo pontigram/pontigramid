@@ -86,6 +86,21 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string
       }
       return session
+    },
+    async redirect({ url, baseUrl }) {
+      // Redirect to admin dashboard after successful login
+      if (url.startsWith('/admin/login') || url === baseUrl) {
+        return `${baseUrl}/admin`
+      }
+      // Allow relative callback URLs
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`
+      }
+      // Allow callback URLs on the same origin
+      if (new URL(url).origin === baseUrl) {
+        return url
+      }
+      return baseUrl
     }
   },
   pages: {
