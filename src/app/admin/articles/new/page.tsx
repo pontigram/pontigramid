@@ -151,9 +151,25 @@ export default function NewArticlePage() {
       return
     }
 
+    console.log('Submitting article with categoryId:', categoryId)
+    console.log('Available categories:', categories)
+    console.log('Selected category:', categories.find(cat => cat.id === categoryId))
+
     setLoading(true)
 
     try {
+      const articleData = {
+        title: title.trim(),
+        content: content.trim(),
+        excerpt: excerpt.trim(),
+        categoryId,
+        featuredImage,
+        published,
+        isBreakingNews
+      }
+
+      console.log('Article data being sent:', articleData)
+
       // Use unified articles endpoint for consistency
       const response = await fetch('/api/articles', {
         method: 'POST',
@@ -161,15 +177,7 @@ export default function NewArticlePage() {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer admin-localStorage-auth' // Simple auth header for localStorage system
         },
-        body: JSON.stringify({
-          title: title.trim(),
-          content: content.trim(),
-          excerpt: excerpt.trim(),
-          categoryId,
-          featuredImage,
-          published,
-          isBreakingNews
-        })
+        body: JSON.stringify(articleData)
       })
 
       const data = await response.json()
