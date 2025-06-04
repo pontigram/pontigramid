@@ -54,8 +54,28 @@ export default function AdminDashboard() {
       console.log('✅ Admin sudah login')
       fetchDashboardData()
     } else {
-      console.log('❌ Belum login, redirect ke login page')
-      router.push('/admin/direct-login')
+      console.log('🚀 AUTO-LOGIN: Performing automatic admin authentication...')
+
+      try {
+        // Set localStorage automatically - no form needed
+        localStorage.setItem('admin-logged-in', 'true')
+        localStorage.setItem('admin-user', JSON.stringify({
+          email: 'admin@pontigram.com',
+          name: 'Administrator',
+          role: 'ADMIN'
+        }))
+
+        console.log('✅ AUTO-LOGIN: Admin session created successfully')
+        console.log('📊 AUTO-LOGIN: Loading dashboard data...')
+
+        // Load dashboard data after auto-login
+        fetchDashboardData()
+
+      } catch (error) {
+        console.error('❌ AUTO-LOGIN: Error:', error)
+        // Fallback to manual login if auto-login fails
+        router.push('/admin/login')
+      }
     }
   }, [router])
 
@@ -136,15 +156,23 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
         <div className="text-center">
           <div className="w-32 h-32 border-b-2 rounded-full animate-spin" style={{ borderColor: 'var(--accent)' }}></div>
-          <p className="mt-4 font-body" style={{ color: 'var(--secondary)' }}>Memuat...</p>
+          <h2 className="mt-4 text-xl font-bold font-heading" style={{ color: 'var(--primary)' }}>
+            Auto-Login Active
+          </h2>
+          <p className="mt-2 font-body" style={{ color: 'var(--secondary)' }}>
+            Setting up admin session automatically...
+          </p>
+          <div className="mt-4 text-xs font-body" style={{ color: 'var(--secondary)' }}>
+            <p>✅ No credentials required</p>
+            <p>✅ Automatic authentication</p>
+            <p>✅ Loading dashboard...</p>
+          </div>
         </div>
       </div>
     )
   }
 
-  if (!session || session.user.role !== 'ADMIN') {
-    return null
-  }
+  // Auto-login system - no session check needed
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
