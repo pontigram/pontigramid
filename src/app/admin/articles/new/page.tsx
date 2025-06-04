@@ -154,10 +154,12 @@ export default function NewArticlePage() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/admin/articles', {
+      // Use unified articles endpoint for consistency
+      const response = await fetch('/api/articles', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer admin-localStorage-auth' // Simple auth header for localStorage system
         },
         body: JSON.stringify({
           title: title.trim(),

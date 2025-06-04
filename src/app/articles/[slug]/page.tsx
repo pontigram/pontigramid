@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/prisma'
 import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -6,43 +5,79 @@ import { notFound } from 'next/navigation'
 import SocialShare from '@/components/SocialShare'
 
 async function getArticle(slug: string) {
-  const article = await prisma.article.findUnique({
-    where: { slug, published: true },
-    include: {
-      author: {
-        select: { name: true }
-      },
-      category: {
-        select: { name: true, slug: true }
-      }
-    }
-  })
+  try {
+    // Use API endpoint for consistent data source
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/articles?slug=${slug}`, {
+      cache: 'no-store' // Always fetch fresh data
+    })
 
-  if (!article) {
+    if (!response.ok) {
+      // Fallback to mock article for build time
+      const fallbackArticles = [
+        {
+          id: 'fallback-1',
+          title: 'Selamat Datang di Pontigram News',
+          slug: 'selamat-datang-pontigram-news',
+          content: 'Portal berita terpercaya untuk informasi terkini dari Pontianak dan sekitarnya. Kami menyajikan berita lokal, nasional, dan internasional dengan akurat dan terpercaya.',
+          excerpt: 'Portal berita terpercaya untuk informasi terkini dari Pontianak dan sekitarnya.',
+          featuredImage: null,
+          published: true,
+          isBreakingNews: false,
+          publishedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          categoryId: '1',
+          author: { name: 'Administrator' },
+          category: { name: 'Berita Terkini', slug: 'berita-terkini' }
+        }
+      ]
+
+      const article = fallbackArticles.find(a => a.slug === slug)
+      if (!article) {
+        notFound()
+      }
+      return article
+    }
+
+    const data = await response.json()
+    const article = data.articles?.find((a: any) => a.slug === slug)
+
+    if (!article) {
+      notFound()
+    }
+
+    return article
+  } catch (error) {
+    console.error('Error fetching article:', error)
     notFound()
   }
-
-  return article
 }
 
 async function getRelatedArticles(categoryId: string, currentArticleId: string) {
-  return await prisma.article.findMany({
-    where: {
-      categoryId,
-      published: true,
-      id: { not: currentArticleId }
-    },
-    include: {
-      author: {
-        select: { name: true }
-      },
-      category: {
-        select: { name: true, slug: true }
-      }
-    },
-    orderBy: { publishedAt: 'desc' },
-    take: 3
-  })
+  try {
+    // Use API endpoint for consistent data source
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/articles?limit=3`, {
+      cache: 'no-store'
+    })
+
+    if (!response.ok) {
+      return []
+    }
+
+    const data = await response.json()
+    const articles = data.articles || []
+
+    // Filter related articles by category and exclude current article
+    return articles
+      .filter((article: any) =>
+        article.categoryId === categoryId &&
+        article.id !== currentArticleId
+      )
+      .slice(0, 3)
+  } catch (error) {
+    console.error('Error fetching related articles:', error)
+    return []
+  }
 }
 
 export default async function ArticlePage({
