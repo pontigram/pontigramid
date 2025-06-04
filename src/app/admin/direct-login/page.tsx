@@ -15,44 +15,22 @@ export default function DirectLoginPage() {
     setLoading(true)
     setError('')
 
-    try {
-      console.log('🔐 Attempting direct admin login...')
-      
-      const response = await fetch('/api/auth/admin-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+    // Simple hardcoded check for demo
+    if (email === 'admin@pontigram.com' && password === 'admin123') {
+      console.log('✅ Login berhasil!')
 
-      const data = await response.json()
-      console.log('🔍 Login response:', data)
+      // Set simple session flag
+      localStorage.setItem('admin-logged-in', 'true')
+      localStorage.setItem('admin-user', JSON.stringify({
+        email: 'admin@pontigram.com',
+        name: 'Administrator',
+        role: 'ADMIN'
+      }))
 
-      if (data.success) {
-        console.log('✅ Login successful, redirecting...')
-        
-        // Multiple redirect attempts
-        try {
-          router.push('/admin')
-        } catch (routerError) {
-          console.log('Router failed, using window.location')
-          window.location.href = '/admin'
-        }
-        
-        // Fallback redirect
-        setTimeout(() => {
-          window.location.href = '/admin'
-        }, 1000)
-        
-      } else {
-        console.log('❌ Login failed:', data.error)
-        setError(data.error || 'Login failed')
-      }
-    } catch (error) {
-      console.error('💥 Login error:', error)
-      setError('Network error. Please try again.')
-    } finally {
+      // Redirect to admin dashboard
+      window.location.href = '/admin'
+    } else {
+      setError('Email atau password salah')
       setLoading(false)
     }
   }

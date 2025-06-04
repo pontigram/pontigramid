@@ -60,29 +60,11 @@ model Article {
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   // Analytics relation
-  analytics  Analytics[]
+
 
   @@map("articles")
 }
 
-model Analytics {
-  id          String   @id @default(cuid())
-  page        String   // URL path
-  title       String?  // Page title
-  userAgent   String?  // Browser info
-  ipAddress   String?  // IP address (hashed for privacy)
-  referrer    String?  // Referring URL
-  sessionId   String?  // Session identifier
-  timestamp   DateTime @default(now())
 
-  // Article specific tracking
-  articleId   String?
-  article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
-
-  @@map("analytics")
-  @@index([page])
-  @@index([timestamp])
-  @@index([articleId])
-}
 
 

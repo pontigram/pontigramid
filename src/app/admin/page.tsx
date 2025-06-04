@@ -46,38 +46,18 @@ export default function AdminDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   useEffect(() => {
-    const checkAuthentication = async () => {
-      // First try NextAuth session
-      if (status === 'loading') return
+    // Check simple localStorage authentication
+    const isLoggedIn = localStorage.getItem('admin-logged-in')
+    const adminUser = localStorage.getItem('admin-user')
 
-      if (session && session.user.role === 'ADMIN') {
-        console.log('✅ NextAuth session valid')
-        fetchDashboardData()
-        return
-      }
-
-      // If NextAuth fails, try alternative authentication
-      try {
-        console.log('🔍 Checking alternative authentication...')
-        const response = await fetch('/api/auth/verify-admin')
-        const data = await response.json()
-
-        if (data.success) {
-          console.log('✅ Alternative auth valid')
-          fetchDashboardData()
-          return
-        }
-      } catch (error) {
-        console.log('❌ Alternative auth failed:', error)
-      }
-
-      // If both fail, redirect to login
-      console.log('❌ No valid authentication, redirecting...')
+    if (isLoggedIn === 'true' && adminUser) {
+      console.log('✅ Admin sudah login')
+      fetchDashboardData()
+    } else {
+      console.log('❌ Belum login, redirect ke login page')
       router.push('/admin/direct-login')
     }
-
-    checkAuthentication()
-  }, [session, status, router])
+  }, [router])
 
   const fetchDashboardData = async () => {
     try {
@@ -153,9 +133,9 @@ export default function AdminDashboard() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+          <div className="w-32 h-32 border-b-2 rounded-full animate-spin" style={{ borderColor: 'var(--accent)' }}></div>
           <p className="mt-4 font-body" style={{ color: 'var(--secondary)' }}>Memuat...</p>
         </div>
       </div>
@@ -169,27 +149,31 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b" style={{ borderColor: 'var(--border)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white border-b shadow-sm" style={{ borderColor: 'var(--border)' }}>
+        <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="py-4">
             <Breadcrumb items={[
               { label: 'Beranda', href: '/' },
               { label: 'Dashboard Admin' }
             ]} />
           </div>
-          <div className="flex justify-between items-center py-6">
+          <div className="flex items-center justify-between py-6">
             <div className="flex items-center">
-              <h1 className="font-heading text-2xl font-bold" style={{ color: 'var(--primary)' }}>
+              <h1 className="text-2xl font-bold font-heading" style={{ color: 'var(--primary)' }}>
                 Dashboard Admin
               </h1>
             </div>
             <nav className="flex space-x-4">
-              <Link href="/" className="font-body transition-colors" style={{ color: 'var(--secondary)' }}>
+              <Link href="/" className="transition-colors font-body" style={{ color: 'var(--secondary)' }}>
                 Lihat Situs
               </Link>
               <button
-                onClick={() => router.push('/api/auth/signout')}
-                className="font-body transition-colors"
+                onClick={() => {
+                  localStorage.removeItem('admin-logged-in')
+                  localStorage.removeItem('admin-user')
+                  window.location.href = '/admin/direct-login'
+                }}
+                className="transition-colors font-body"
                 style={{ color: 'var(--news-danger)' }}
               >
                 Keluar
@@ -201,11 +185,11 @@ export default function AdminDashboard() {
 
       {/* Quick Actions Bar */}
       <div className="border-b" style={{ backgroundColor: 'var(--muted)', borderColor: 'var(--border)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="px-4 py-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
           <div className="flex flex-wrap gap-4">
             <Link
               href="/admin/articles/new"
-              className="btn-primary text-white px-4 py-2 rounded-md flex items-center"
+              className="flex items-center px-4 py-2 text-white rounded-md btn-primary"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -214,7 +198,7 @@ export default function AdminDashboard() {
             </Link>
             <Link
               href="/admin/categories"
-              className="btn-accent text-white px-4 py-2 rounded-md flex items-center"
+              className="flex items-center px-4 py-2 text-white rounded-md btn-accent"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -223,7 +207,7 @@ export default function AdminDashboard() {
             </Link>
             <Link
               href="/admin/ticker"
-              className="text-white px-4 py-2 rounded-md flex items-center transition-colors"
+              className="flex items-center px-4 py-2 text-white transition-colors rounded-md"
               style={{ backgroundColor: 'var(--news-warning)' }}
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -231,19 +215,10 @@ export default function AdminDashboard() {
               </svg>
               Kelola Ticker
             </Link>
-            <Link
-              href="/admin/analytics"
-              className="text-white px-4 py-2 rounded-md flex items-center transition-colors"
-              style={{ backgroundColor: 'var(--news-normal)' }}
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Analytics
-            </Link>
+
             <Link
               href="/admin/media"
-              className="text-white px-4 py-2 rounded-md flex items-center transition-colors"
+              className="flex items-center px-4 py-2 text-white transition-colors rounded-md"
               style={{ backgroundColor: 'var(--news-secondary)' }}
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,15 +231,15 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h2 className="font-subheading text-xl font-semibold mb-4" style={{ color: 'var(--primary)' }}>
-            Selamat datang kembali, {session.user.name || session.user.email}
+          <h2 className="mb-4 text-xl font-semibold font-subheading" style={{ color: 'var(--primary)' }}>
+            Selamat datang kembali, Administrator
           </h2>
 
           {/* Enhanced Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="card-elegant p-6">
+          <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-4">
+            <div className="p-6 card-elegant">
               <div className="flex items-center">
                 <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--accent)' }}>
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,13 +247,13 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="font-subheading text-lg font-medium" style={{ color: 'var(--primary)' }}>Total Artikel</h3>
+                  <h3 className="text-lg font-medium font-subheading" style={{ color: 'var(--primary)' }}>Total Artikel</h3>
                   <p className="text-3xl font-bold" style={{ color: 'var(--accent)' }}>{stats.totalArticles}</p>
                 </div>
               </div>
             </div>
 
-            <div className="card-elegant p-6">
+            <div className="p-6 card-elegant">
               <div className="flex items-center">
                 <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--news-success)' }}>
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,13 +261,13 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="font-subheading text-lg font-medium" style={{ color: 'var(--primary)' }}>Terpublikasi</h3>
+                  <h3 className="text-lg font-medium font-subheading" style={{ color: 'var(--primary)' }}>Terpublikasi</h3>
                   <p className="text-3xl font-bold" style={{ color: 'var(--news-success)' }}>{stats.publishedArticles}</p>
                 </div>
               </div>
             </div>
 
-            <div className="card-elegant p-6">
+            <div className="p-6 card-elegant">
               <div className="flex items-center">
                 <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--news-warning)' }}>
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,13 +275,13 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="font-subheading text-lg font-medium" style={{ color: 'var(--primary)' }}>Draft</h3>
+                  <h3 className="text-lg font-medium font-subheading" style={{ color: 'var(--primary)' }}>Draft</h3>
                   <p className="text-3xl font-bold" style={{ color: 'var(--news-warning)' }}>{stats.draftArticles}</p>
                 </div>
               </div>
             </div>
 
-            <div className="card-elegant p-6">
+            <div className="p-6 card-elegant">
               <div className="flex items-center">
                 <div className="p-3 rounded-full" style={{ backgroundColor: 'var(--news-danger)' }}>
                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +289,7 @@ export default function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="font-subheading text-lg font-medium" style={{ color: 'var(--primary)' }}>Breaking News</h3>
+                  <h3 className="text-lg font-medium font-subheading" style={{ color: 'var(--primary)' }}>Breaking News</h3>
                   <p className="text-3xl font-bold" style={{ color: 'var(--news-danger)' }}>{stats.breakingNewsCount}</p>
                 </div>
               </div>
@@ -323,13 +298,13 @@ export default function AdminDashboard() {
 
           {/* Category Filter */}
           <div className="mb-6">
-            <label className="font-subheading text-sm font-medium mb-2 block" style={{ color: 'var(--primary)' }}>
+            <label className="block mb-2 text-sm font-medium font-subheading" style={{ color: 'var(--primary)' }}>
               Filter berdasarkan kategori:
             </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="card-elegant px-3 py-2 border-0 rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="px-3 py-2 border-0 rounded-md card-elegant focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               style={{ color: 'var(--primary)' }}
             >
               <option value="all">Semua Kategori</option>
@@ -345,7 +320,7 @@ export default function AdminDashboard() {
         {/* Articles Table */}
         <div className="card-elegant">
           <div className="px-6 py-4 border-b" style={{ borderColor: 'var(--border)' }}>
-            <h3 className="font-subheading text-lg font-medium" style={{ color: 'var(--primary)' }}>
+            <h3 className="text-lg font-medium font-subheading" style={{ color: 'var(--primary)' }}>
               Artikel Terbaru ({filteredArticles.length})
             </h3>
           </div>
@@ -353,22 +328,22 @@ export default function AdminDashboard() {
             <table className="min-w-full divide-y" style={{ borderColor: 'var(--border)' }}>
               <thead style={{ backgroundColor: 'var(--muted)' }}>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--secondary)' }}>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase" style={{ color: 'var(--secondary)' }}>
                     Judul
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--secondary)' }}>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase" style={{ color: 'var(--secondary)' }}>
                     Kategori
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--secondary)' }}>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase" style={{ color: 'var(--secondary)' }}>
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--secondary)' }}>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase" style={{ color: 'var(--secondary)' }}>
                     Breaking
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--secondary)' }}>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase" style={{ color: 'var(--secondary)' }}>
                     Dibuat
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--secondary)' }}>
+                  <th className="px-6 py-3 text-xs font-medium tracking-wider text-left uppercase" style={{ color: 'var(--secondary)' }}>
                     Aksi
                   </th>
                 </tr>
@@ -377,7 +352,7 @@ export default function AdminDashboard() {
                 {filteredArticles.map((article) => (
                   <tr key={article.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
-                      <div className="font-body text-sm font-medium" style={{ color: 'var(--primary)' }}>
+                      <div className="text-sm font-medium font-body" style={{ color: 'var(--primary)' }}>
                         {article.title}
                       </div>
                     </td>
@@ -404,20 +379,20 @@ export default function AdminDashboard() {
                         {article.isBreakingNews ? 'Breaking' : 'Normal'}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap font-body text-sm" style={{ color: 'var(--secondary)' }}>
+                    <td className="px-6 py-4 text-sm whitespace-nowrap font-body" style={{ color: 'var(--secondary)' }}>
                       {new Date(article.createdAt).toLocaleDateString('id-ID')}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
                       <Link
                         href={`/admin/articles/${article.id}/edit`}
-                        className="font-body mr-4 transition-colors"
+                        className="mr-4 transition-colors font-body"
                         style={{ color: 'var(--accent)' }}
                       >
                         Edit
                       </Link>
                       <button
                         onClick={() => deleteArticle(article.id)}
-                        className="font-body transition-colors"
+                        className="transition-colors font-body"
                         style={{ color: 'var(--news-danger)' }}
                       >
                         Hapus
