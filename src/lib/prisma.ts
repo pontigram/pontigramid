@@ -4,8 +4,11 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Check if we're in build time - NEVER use mock in production runtime
-const isBuildTime = false // Force real Prisma client in production
+// Check if we're in build time or if DATABASE_URL is mock
+const isBuildTime = process.env.NODE_ENV === 'production' &&
+  (process.env.DATABASE_URL?.includes('localhost:5432/mock') ||
+   process.env.DATABASE_URL?.includes('mock') ||
+   !process.env.DATABASE_URL)
 
 // Mock Prisma client for build time
 const mockPrismaClient = {

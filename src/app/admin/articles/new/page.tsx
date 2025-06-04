@@ -64,9 +64,19 @@ export default function NewArticlePage() {
     try {
       const response = await fetch('/api/categories')
       const data = await response.json()
-      setCategories(data)
+      setCategories(data.categories || data || [])
     } catch (error) {
       console.error('Failed to fetch categories:', error)
+      // Set fallback categories if API fails
+      const fallbackCategories = [
+        { id: '1', name: 'Berita Terkini', slug: 'berita-terkini' },
+        { id: '2', name: 'Budaya Melayu', slug: 'budaya-melayu' },
+        { id: '3', name: 'Pariwisata', slug: 'pariwisata' },
+        { id: '4', name: 'Ekonomi', slug: 'ekonomi' },
+        { id: '5', name: 'Olahraga', slug: 'olahraga' }
+      ]
+      setCategories(fallbackCategories)
+      setError('Using fallback categories - some features may be limited')
     }
   }
 
