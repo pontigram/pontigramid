@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, getSession } from 'next-auth/react'
+// Removed NextAuth imports - using simple localStorage authentication
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -16,57 +16,41 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    try {
-      console.log('🔐 Attempting login with:', email)
+    console.log('🔐 Attempting simple admin login...')
+    console.log('📧 Email:', email)
+    console.log('🔑 Password length:', password.length)
 
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
-      })
+    // Simple hardcoded authentication - no API calls
+    if (email === 'admin@pontigram.com' && password === 'admin123') {
+      console.log('✅ Credentials match! Setting localStorage...')
 
-      console.log('🔍 Login result:', result)
+      try {
+        // Set localStorage session
+        localStorage.setItem('admin-logged-in', 'true')
+        localStorage.setItem('admin-user', JSON.stringify({
+          email: 'admin@pontigram.com',
+          name: 'Administrator',
+          role: 'ADMIN'
+        }))
 
-      if (result?.error) {
-        console.log('❌ Login failed:', result.error)
-        setError('Invalid credentials')
-      } else if (result?.ok) {
-        console.log('✅ Login successful, getting session...')
+        console.log('✅ localStorage set successfully')
+        console.log('🚀 Redirecting to admin dashboard...')
 
-        // Wait a bit for session to be established
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Immediate redirect
+        window.location.href = '/admin'
 
-        const session = await getSession()
-        console.log('📋 Session:', session)
-
-        if (session?.user?.role === 'ADMIN') {
-          console.log('🚀 Redirecting to admin dashboard...')
-
-          // Try multiple redirect methods
-          try {
-            router.push('/admin')
-            // Fallback redirect
-            setTimeout(() => {
-              window.location.href = '/admin'
-            }, 2000)
-          } catch (redirectError) {
-            console.error('Router redirect failed:', redirectError)
-            window.location.href = '/admin'
-          }
-        } else {
-          console.log('❌ Access denied, user role:', session?.user?.role)
-          setError('Access denied. Admin privileges required.')
-        }
-      } else {
-        console.log('❌ Unknown login result:', result)
-        setError('Login failed. Please try again.')
+      } catch (storageError) {
+        console.error('❌ localStorage error:', storageError)
+        setError('Login berhasil tapi gagal menyimpan session. Silakan coba lagi.')
       }
-    } catch (error) {
-      console.error('💥 Login error:', error)
-      setError('An error occurred. Please try again.')
-    } finally {
-      setLoading(false)
+    } else {
+      console.log('❌ Invalid credentials provided')
+      console.log('Expected: admin@pontigram.com / admin123')
+      console.log('Received:', email, '/ [password hidden]')
+      setError('Email atau password salah. Gunakan: admin@pontigram.com / admin123')
     }
+
+    setLoading(false)
   }
 
   return (
@@ -82,7 +66,7 @@ export default function LoginPage() {
           Admin Dashboard
         </h2>
         <p className="mt-2 text-center font-body text-sm" style={{ color: 'var(--secondary)' }}>
-          Masuk untuk mengakses panel administrasi
+          Gunakan: admin@pontigram.com / admin123
         </p>
       </div>
 
