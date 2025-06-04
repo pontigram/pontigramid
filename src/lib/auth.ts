@@ -13,32 +13,24 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          console.log('Missing credentials')
+          console.log('❌ Missing credentials')
           return null
         }
 
+        console.log('🔐 Attempting authentication for:', credentials.email)
+
         try {
-          // Use direct PostgreSQL connection instead of Prisma
-          const pool = new Pool({
-            connectionString: process.env.DATABASE_URL,
-            ssl: {
-              rejectUnauthorized: false
-            }
-          })
-
-          const client = await pool.connect()
-
+          // First try with Prisma
           try {
-            const userQuery = 'SELECT "id", "email", "password", "name", "role" FROM "users" WHERE "email" = $1'
-            const result = await client.query(userQuery, [credentials.email])
+            console.log('🔍 Trying Prisma authentication...')
+            const user = await prisma.user.findUnique({
+              where: { email: credentials.email }
+            })
 
-            if (result.rows.length === 0) {
-              console.log('User not found:', credentials.email)
-              return null
+            if (!user) {
+              console.log('❌ User not found with Prisma:', credentials.email)
+              throw new Error('User not found with Prisma')
             }
-
-            const user = result.rows[0]
-            console.log('User found:', { email: user.email, role: user.role })
 
             const isPasswordValid = await bcrypt.compare(
               credentials.password,
@@ -46,11 +38,11 @@ export const authOptions: NextAuthOptions = {
             )
 
             if (!isPasswordValid) {
-              console.log('Invalid password for user:', credentials.email)
+              console.log('❌ Invalid password for user:', credentials.email)
               return null
             }
 
-            console.log('Authentication successful for:', credentials.email)
+            console.log('✅ Authentication successful with Prisma:', credentials.email)
             return {
               id: user.id,
               email: user.email,
@@ -58,13 +50,57 @@ export const authOptions: NextAuthOptions = {
               role: user.role,
             }
 
-          } finally {
-            client.release()
-            await pool.end()
+          } catch (prismaError) {
+            console.log('⚠️ Prisma auth failed, trying PostgreSQL:', prismaError.message)
+
+            // Fallback to direct PostgreSQL connection
+            const pool = new Pool({
+              connectionString: process.env.DATABASE_URL,
+              ssl: {
+                rejectUnauthorized: false
+              }
+            })
+
+            const client = await pool.connect()
+
+            try {
+              const userQuery = 'SELECT "id", "email", "password", "name", "role" FROM "users" WHERE "email" = $1'
+              const result = await client.query(userQuery, [credentials.email])
+
+              if (result.rows.length === 0) {
+                console.log('❌ User not found with PostgreSQL:', credentials.email)
+                return null
+              }
+
+              const user = result.rows[0]
+              console.log('✅ User found with PostgreSQL:', { email: user.email, role: user.role })
+
+              const isPasswordValid = await bcrypt.compare(
+                credentials.password,
+                user.password
+              )
+
+              if (!isPasswordValid) {
+                console.log('❌ Invalid password for user:', credentials.email)
+                return null
+              }
+
+              console.log('✅ Authentication successful with PostgreSQL:', credentials.email)
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+              }
+
+            } finally {
+              client.release()
+              await pool.end()
+            }
           }
 
         } catch (error) {
-          console.error('Authentication error:', error)
+          console.error('💥 Authentication error:', error)
           return null
         }
       }
