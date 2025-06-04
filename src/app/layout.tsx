@@ -3,7 +3,7 @@ import { Merriweather, Inter, Lora } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import ScrollToTop from "@/components/ScrollToTop";
-import Analytics from "@/components/Analytics";
+// Analytics removed - using simple admin system
 
 const merriweather = Merriweather({
   variable: "--font-merriweather",
@@ -43,7 +43,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <ScrollToTop />
-          <Analytics />
+          {/* Analytics removed - using simple admin system */}
         </Providers>
       </body>
     </html>
