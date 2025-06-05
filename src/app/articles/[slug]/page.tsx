@@ -6,46 +6,17 @@ import SocialShare from '@/components/SocialShare'
 
 async function getArticle(slug: string) {
   try {
-    // Use API endpoint for consistent data source
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/articles?slug=${slug}`, {
+    // Use dedicated article API endpoint
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/articles/${slug}`, {
       cache: 'no-store' // Always fetch fresh data
     })
 
     if (!response.ok) {
-      // Fallback to mock article for build time
-      const fallbackArticles = [
-        {
-          id: 'fallback-1',
-          title: 'Selamat Datang di Pontigram News',
-          slug: 'selamat-datang-pontigram-news',
-          content: 'Portal berita terpercaya untuk informasi terkini dari Pontianak dan sekitarnya. Kami menyajikan berita lokal, nasional, dan internasional dengan akurat dan terpercaya.',
-          excerpt: 'Portal berita terpercaya untuk informasi terkini dari Pontianak dan sekitarnya.',
-          featuredImage: null,
-          published: true,
-          isBreakingNews: false,
-          publishedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          categoryId: '1',
-          author: { name: 'Administrator' },
-          category: { name: 'Berita Terkini', slug: 'berita-terkini' }
-        }
-      ]
-
-      const article = fallbackArticles.find(a => a.slug === slug)
-      if (!article) {
-        notFound()
-      }
-      return article
-    }
-
-    const data = await response.json()
-    const article = data.articles?.find((a: any) => a.slug === slug)
-
-    if (!article) {
+      console.error(`Article not found: ${slug}`)
       notFound()
     }
 
+    const article = await response.json()
     return article
   } catch (error) {
     console.error('Error fetching article:', error)
