@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "prisma generate && next build",
-    "build:fallback": "SKIP_ENV_VALIDATION=true DATABASE_URL=postgresql://localhost:5432/mock DIRECT_URL=postgresql://localhost:5432/mock prisma generate && SKIP_ENV_VALIDATION=true next build",
+    "build:production": "NODE_ENV=production prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
@@ -15,7 +15,8 @@
     "db:setup": "node scripts/setup-database.js",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset --force && npm run db:setup",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && next build"
   },
   "dependencies": {
     "@prisma/client": "^5.15.0",

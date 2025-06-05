@@ -3,11 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
+export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     
@@ -18,7 +14,14 @@ export async function PATCH(
       )
     }
 
-    const { isBreakingNews } = await request.json()
+    const { id, isBreakingNews } = await request.json()
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Article ID is required' },
+        { status: 400 }
+      )
+    }
     
     // Update the article's breaking news status
     const updatedArticle = await prisma.article.update({
